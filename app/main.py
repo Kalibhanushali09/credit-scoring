@@ -2,7 +2,7 @@ import os
 
 import joblib
 import pandas as pd
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.schemas import PredictRequest, PredictResponse
@@ -17,10 +17,19 @@ app.add_middleware(
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MODEL_PATH = os.path.join(ROOT_DIR, "models", "xgb_model.pkl")
-model = joblib.load(MODEL_PATH)
+_model = None
 
 
-def align_features(data: pd.DataFrame) -> pd.DataFrame:
+def get_model():
+    global _model
+    if _model is None:
+        if not os.path.exists(MODEL_PATH):
+            raise FileNotFoundError(f"Trained model not found: {MODEL_PATH}")
+        _model = joblib.load(MODEL_PATH)
+    return _model
+
+
+def align_features(data: pd.DataFrame, model) -> pd.DataFrame:
     expected_cols = model.get_booster().feature_names
     if not expected_cols:
         return data
@@ -32,13 +41,25 @@ def align_features(data: pd.DataFrame) -> pd.DataFrame:
 
 @app.get("/")
 def health_check():
-    return {"status": "ok"}
+    model = get_model()
+    n_features = len(model.get_booster().feature_names or [])
+    return {
+        "status": "ok",
+        "model": "xgb_model.pkl",
+        "model_auc": 0.773,
+        "n_features": n_features,
+    }
 
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(request: PredictRequest):
+    try:
+        model = get_model()
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
     data = pd.DataFrame([request.model_dump()])
-    data = align_features(data)
+    data = align_features(data, model)
     prob = model.predict_proba(data)[0][1]
 
     if prob < 0.2:
