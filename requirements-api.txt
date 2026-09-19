@@ -1,0 +1,5 @@
+fastapi
+numpy
+joblib
+xgboost==1.7.6
+pydantic

@@ -11,7 +11,7 @@ import streamlit as st
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SAMPLE_PATH = os.path.join(ROOT_DIR, "data", "processed", "X_test_sample.csv")
-DEFAULT_API_URL = "http://localhost:8000"
+DEFAULT_API_URL = "https://credit-scoring-api-vert.vercel.app"
 
 
 def get_api_url() -> str:

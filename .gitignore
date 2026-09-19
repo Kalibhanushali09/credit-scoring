@@ -1,4 +1,6 @@
 .venv/
+.vercel/
+.vercel/
 venv/
 __pycache__/
 **/__pycache__/
@@ -12,3 +14,4 @@ data/raw/*.csv
 data/interim/*
 !data/interim/.gitkeep
 *.ipynb_checkpoints/
+.vercel

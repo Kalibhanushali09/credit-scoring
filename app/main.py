@@ -1,7 +1,8 @@
 import os
 
 import joblib
-import pandas as pd
+import numpy as np
+import xgboost as xgb
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -29,25 +30,19 @@ def get_model():
     return _model
 
 
-def align_features(data: pd.DataFrame, model) -> pd.DataFrame:
-    expected_cols = model.get_booster().feature_names
-    if not expected_cols:
-        return data
-    for col in expected_cols:
-        if col not in data.columns:
-            data[col] = 0
-    return data[expected_cols]
+def row_from_request(payload: dict, feature_names: list[str]) -> np.ndarray:
+    return np.array([[payload.get(col, 0) for col in feature_names]], dtype=float)
 
 
 @app.get("/")
 def health_check():
     model = get_model()
-    n_features = len(model.get_booster().feature_names or [])
+    names = model.get_booster().feature_names or []
     return {
         "status": "ok",
         "model": "xgb_model.pkl",
         "model_auc": 0.773,
-        "n_features": n_features,
+        "n_features": len(names),
     }
 
 
@@ -58,9 +53,15 @@ def predict(request: PredictRequest):
     except FileNotFoundError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    data = pd.DataFrame([request.model_dump()])
-    data = align_features(data, model)
-    prob = model.predict_proba(data)[0][1]
+    try:
+        payload = request.model_dump()
+        booster = model.get_booster()
+        names = booster.feature_names or list(payload.keys())
+        data = row_from_request(payload, names)
+        dmat = xgb.DMatrix(data, feature_names=names)
+        prob = float(booster.predict(dmat)[0])
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Model predict failed: {exc}") from exc
 
     if prob < 0.2:
         category = "LOW"

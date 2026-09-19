@@ -8,3 +8,7 @@ notebooks
 tests
 .cursor
 __pycache__
+docker-pip.txt
+dashboard
+src
+requirements-api.txt

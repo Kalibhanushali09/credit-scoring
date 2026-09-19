@@ -7,6 +7,3 @@ scikit-learn
 shap
 matplotlib
 requests
-fastapi
-uvicorn
-pydantic

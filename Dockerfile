@@ -7,8 +7,8 @@ ENV GIT_PYTHON_REFRESH=quiet
 
 WORKDIR /app
 
-COPY requirements-docker.txt .
-RUN pip install --no-cache-dir -r requirements-docker.txt
+COPY docker-pip.txt .
+RUN pip install --no-cache-dir -r docker-pip.txt
 
 COPY . .
 
