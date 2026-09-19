@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+xgboost
+scikit-learn
+pandas
+numpy
+joblib
+shap
+mlflow
+torch
+pydantic
+streamlit
+scipy
+matplotlib
+seaborn
+requests
