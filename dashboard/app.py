@@ -52,6 +52,7 @@ def show_result(prob: float, category: str) -> None:
 
 st.title("Credit Risk Scoring Dashboard")
 st.markdown("**Behavioral Risk Modeling for Thin-File Borrowers**")
+st.metric("Model AUC", "0.773")
 
 api_ok = False
 try:
